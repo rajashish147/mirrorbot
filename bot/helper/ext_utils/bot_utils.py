@@ -133,7 +133,6 @@ def get_readable_message():
             msg += f"\n<b>Speed:</b> {download.speed()} | <b>ETA:</b> {download.eta()}"
             msg += f"\n<b>Elapsed:</b> {download.get()}"
             msg += f"\n<b>URL:</b> <code>{download.url()}</code>"
-            msg += f"\n<b>Elapsed:</b> {download.get_readable_time()}"
             if hasattr(download, 'seeders_num'):
                 try:
                     msg += f"\n<b>Seeders:</b> {download.seeders_num()} | <b>Leechers:</b> {download.leechers_num()}"
