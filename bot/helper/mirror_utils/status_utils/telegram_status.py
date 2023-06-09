@@ -10,6 +10,7 @@ class TelegramStatus:
         self.__status = status
         self.message = message
         self.extra_details = extra_details
+        
     def processed_bytes(self):
         return get_readable_file_size(self.__obj.processed_bytes)
 
