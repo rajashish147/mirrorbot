@@ -10,7 +10,7 @@ class MegaDownloadStatus:
         self.__size = size
         self.__gid = gid
         self.message = message
-		self.extra_details = extra_details
+        self.extra_details = extra_details
 
     def name(self):
         return self.__name

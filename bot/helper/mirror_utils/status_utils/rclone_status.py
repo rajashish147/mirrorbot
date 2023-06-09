@@ -7,7 +7,7 @@ class RcloneStatus:
         self.__gid = gid
         self.__status = status
         self.message = message
-		self.extra_details = extra_details
+        self.extra_details = extra_details
 
     def gid(self):
         return self.__gid
