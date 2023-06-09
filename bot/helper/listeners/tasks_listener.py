@@ -16,7 +16,7 @@ from bot import (DATABASE_URL, DOWNLOAD_DIR, GLOBAL_EXTENSION_FILTER, LOGGER,
                  download_dict_lock, non_queued_dl, non_queued_up,
                  queue_dict_lock, queued_dl, queued_up, status_reply_dict_lock,
                  user_data)
-from bot.helper.ext_utils.bot_utils import (extra_btns, get_readable_file_size,
+from bot.helper.ext_utils.bot_utils import (get_readable_file_size,
                                             get_readable_time, sync_to_async)
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
@@ -401,9 +401,6 @@ class MirrorLeechListener:
             else:
                 fmsg = ''
                 buttons = ButtonMaker()
-                buttons = extra_btns(buttons)
-                if self.isSuperGroup and not self.message.chat.has_protected_content:
-                    buttons.ibutton('Save This Message', 'save', 'footer')
                 for index, (link, name) in enumerate(files.items(), start=1):
                     fmsg += f"{index}. <a href='{link}'>{name}</a>\n"
                     if len(fmsg.encode() + msg.encode()) > 4000:
@@ -462,8 +459,7 @@ class MirrorLeechListener:
                             if mime_type.startswith(('image', 'video', 'audio')):
                                 share_urls = f'{INDEX_URL}/{url_path}?a=view'
                                 buttons.ubutton("🌐 View Link", share_urls)
-                buttons = extra_btns(buttons)
-                if self.dmMessage:
+                                if self.dmMessage:
                     msg += '\n\n<b>Links has been sent in your DM.</b>'
                     await sendMessage(self.message, msg)
                     await sendMessage(self.dmMessage, msg, buttons.build_menu(2))
