@@ -23,7 +23,7 @@ class Aria2Status:
         self.start_time = 0
         self.seeding = seeding
         self.message = listener.message
-
+        self.extra_details = self.__listener.extra_details
     def __update(self):
         if self.__download is None:
             self.__download = get_download(self.__gid)

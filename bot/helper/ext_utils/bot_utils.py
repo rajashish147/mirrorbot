@@ -131,6 +131,7 @@ def get_readable_message():
             msg += f"\n{get_progress_bar_string(download.progress())} {download.progress()}"
             msg += f"\n<b>Processed:</b> {download.processed_bytes()} of {download.size()}"
             msg += f"\n<b>Speed:</b> {download.speed()} | <b>ETA:</b> {download.eta()}"
+            msg += f"\n<b>Elapsed</b>: {get_readable_time(time() - download.extra_details['startTime'])}"
             if hasattr(download, 'seeders_num'):
                 try:
                     msg += f"\n<b>Seeders:</b> {download.seeders_num()} | <b>Leechers:</b> {download.leechers_num()}"

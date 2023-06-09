@@ -88,7 +88,7 @@ async def rcloneNode(client, message, link, dst_path, rcf, tag):
     gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=12))
     async with download_dict_lock:
         download_dict[message.id] = RcloneStatus(
-            RCTransfer, message, gid, 'cl')
+            RCTransfer, message, gid, 'cl', listener.extra_details)
     await sendStatusMessage(message)
     link, destination = await RCTransfer.clone(config_path, remote, src_path, dst_path, rcf, mime_type)
     if not link:
@@ -153,7 +153,7 @@ async def gdcloneNode(message, link, tag):
             gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=12))
             async with download_dict_lock:
                 download_dict[message.id] = GdriveStatus(
-                    drive, size, message, gid, 'cl')
+                    drive, size, message, gid, 'cl', listener.extra_details)
             await sendStatusMessage(message)
             link, size, mime_type, files, folders = await sync_to_async(drive.clone, link)
         if not link:

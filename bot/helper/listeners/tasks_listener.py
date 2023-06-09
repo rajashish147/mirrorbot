@@ -5,6 +5,7 @@ from os import walk, path as ospath
 from html import escape
 from aioshutil import move
 from asyncio import create_subprocess_exec, sleep, Event
+from time import time
 
 from bot import Interval, aria2, DOWNLOAD_DIR, download_dict, download_dict_lock, LOGGER, DATABASE_URL, \
     MAX_SPLIT_SIZE, config_dict, status_reply_dict_lock, user_data, non_queued_up, non_queued_dl, queued_up, \
@@ -51,6 +52,7 @@ class MirrorLeechListener:
         self.sameDir = sameDir
         self.rcFlags = rcFlags
         self.upPath = upPath
+        self.extra_details = {'startTime': time()}
 
     async def clean(self):
         try:
@@ -286,7 +288,7 @@ class MirrorLeechListener:
             LOGGER.info(f"Leech Name: {up_name}")
             tg = TgUploader(up_name, up_dir, self)
             tg_upload_status = TelegramStatus(
-                tg, size, self.message, gid, 'up')
+                tg, size, self.message, gid, 'up', self.extra_details)
             async with download_dict_lock:
                 download_dict[self.uid] = tg_upload_status
             await update_all_messages()
@@ -295,7 +297,7 @@ class MirrorLeechListener:
             size = await get_path_size(path)
             LOGGER.info(f"Upload Name: {up_name}")
             drive = GoogleDriveHelper(up_name, up_dir, self)
-            upload_status = GdriveStatus(drive, size, self.message, gid, 'up')
+            upload_status = GdriveStatus(drive, size, self.message, gid, 'up', self.extra_details)
             async with download_dict_lock:
                 download_dict[self.uid] = upload_status
             await update_all_messages()
@@ -306,7 +308,7 @@ class MirrorLeechListener:
             RCTransfer = RcloneTransferHelper(self, up_name)
             async with download_dict_lock:
                 download_dict[self.uid] = RcloneStatus(
-                    RCTransfer, self.message, gid, 'up')
+                    RCTransfer, self.message, gid, 'up', self.extra_details)
             await update_all_messages()
             await RCTransfer.upload(path, size)
 

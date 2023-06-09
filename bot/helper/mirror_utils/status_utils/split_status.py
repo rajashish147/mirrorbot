@@ -10,6 +10,7 @@ class SplitStatus:
         self.__size = size
         self.__listener = listener
         self.message = listener.message
+        self.extra_details = self.__listener.extra_details
 
     def gid(self):
         return self.__gid

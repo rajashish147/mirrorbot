@@ -11,6 +11,7 @@ class QueueStatus:
         self.__listener = listener
         self.__status = status
         self.message = listener.message
+        self.extra_details = self.__listener.extra_details
 
     def gid(self):
         return self.__gid
