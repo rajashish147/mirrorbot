@@ -7,7 +7,7 @@ from bot.helper.ext_utils.fs_utils import get_path_size
 
 
 class ExtractStatus:
-    def __init__(self, name, size, gid, listener):
+    def __init__(self, name, size, gid, listener, extra_details):
         self.__name = name
         self.__size = size
         self.__gid = gid
@@ -15,7 +15,7 @@ class ExtractStatus:
         self.__uid = listener.uid
         self.__start_time = time()
         self.message = listener.message
-        self.extra_details = self.__listener.extra_details
+        self.extra_details = extra_details
 
     def gid(self):
         return self.__gid
