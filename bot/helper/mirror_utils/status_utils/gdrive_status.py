@@ -3,12 +3,13 @@ from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size,
 
 
 class GdriveStatus:
-    def __init__(self, obj, size, message, gid, status):
+    def __init__(self, obj, size, message, gid, status, extra_details):
         self.__obj = obj
         self.__size = size
         self.__gid = gid
         self.__status = status
         self.message = message
+        self.extra_details = extra_details
 
     def processed_bytes(self):
         return get_readable_file_size(self.__obj.processed_bytes)

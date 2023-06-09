@@ -51,6 +51,8 @@ class MirrorLeechListener:
         self.sameDir = sameDir
         self.rcFlags = rcFlags
         self.upPath = upPath
+        self.__setMode()
+        self.__source()
 
     async def clean(self):
         try:
@@ -62,6 +64,36 @@ class MirrorLeechListener:
             await delete_all_messages()
         except:
             pass
+
+    def __setMode(self):
+        if self.isLeech:
+            mode = 'Leech'
+        elif self.isClone:
+            mode = 'Clone'
+        elif self.upPath != 'gd':
+            mode = 'Rclone'
+        else:
+            mode = 'Drive'
+        if self.isZip:
+            mode += ' as Zip'
+        elif self.extract:
+            mode += ' as Unzip'
+        self.extra_details['mode'] = mode
+
+    def __source(self):
+        if sender_chat := self.message.sender_chat:
+            source = sender_chat.title
+        else:
+            source = self.message.from_user.username or self.message.from_user.id
+        if reply_to := self.message.reply_to_message:
+            if sender_chat := reply_to.sender_chat:
+                source = reply_to.sender_chat.title
+            elif not reply_to.from_user.is_bot:
+                source = reply_to.from_user.username or reply_to.from_user.id
+        if self.isSuperGroup:
+            self.extra_details['source'] = f"<a href='{self.message.link}'>{source}</a>"
+        else:
+            self.extra_details['source'] = f"<i>{source}</i>"
 
     async def onDownloadStart(self):
         if self.isSuperGroup and config_dict['INCOMPLETE_TASK_NOTIFIER'] and DATABASE_URL:
@@ -286,7 +318,7 @@ class MirrorLeechListener:
             LOGGER.info(f"Leech Name: {up_name}")
             tg = TgUploader(up_name, up_dir, self)
             tg_upload_status = TelegramStatus(
-                tg, size, self.message, gid, 'up')
+                tg, size, self.message, gid, 'up', self.extra_details)
             async with download_dict_lock:
                 download_dict[self.uid] = tg_upload_status
             await update_all_messages()
@@ -295,18 +327,19 @@ class MirrorLeechListener:
             size = await get_path_size(path)
             LOGGER.info(f"Upload Name: {up_name}")
             drive = GoogleDriveHelper(up_name, up_dir, self)
-            upload_status = GdriveStatus(drive, size, self.message, gid, 'up')
+            upload_status = GdriveStatus(
+                drive, size, self.message, gid, 'up', self.extra_details)
             async with download_dict_lock:
                 download_dict[self.uid] = upload_status
             await update_all_messages()
-            await sync_to_async(drive.upload, up_name, size)
+            await sync_to_async(drive.upload, up_name, size, self.drive_id)
         else:
             size = await get_path_size(path)
             LOGGER.info(f"Upload Name: {up_name}")
             RCTransfer = RcloneTransferHelper(self, up_name)
             async with download_dict_lock:
                 download_dict[self.uid] = RcloneStatus(
-                    RCTransfer, self.message, gid, 'up')
+                    RCTransfer, self.message, gid, 'up', self.extra_details)
             await update_all_messages()
             await RCTransfer.upload(path, size)
 
@@ -317,9 +350,11 @@ class MirrorLeechListener:
         LOGGER.info(f'Task Done: {name}')
         if self.isLeech:
             msg += f'\n<b>Total Files: </b>{folders}'
+			msg += f"\n<b>Elapsed</b>: {get_readable_time(time() - self.extra_details['startTime'])}"
             if mime_type != 0:
                 msg += f'\n<b>Corrupted Files: </b>{mime_type}'
             msg += f'\n<b>cc: </b>{self.tag}\n\n'
+			msg += f"\n<b>Upload</b>: {self.extra_details['mode']}\n\n"
             if not files:
                 await sendMessage(self.message, msg)
             else:
@@ -345,6 +380,13 @@ class MirrorLeechListener:
             if mime_type == "Folder":
                 msg += f'\n<b>SubFolders: </b>{folders}'
                 msg += f'\n<b>Files: </b>{files}'
+                try:
+                    drive_id = GoogleDriveHelper.getIdFromUrl(link)
+                    msg += f"\n\n<b>Folder id</b>: <code>{drive_id}</code>"
+                except:
+                    pass
+            msg += f'\n\n<b>#cc</b>: {self.tag} | <b>Elapsed</b>: {get_readable_time(time() - self.extra_details["startTime"])}'
+            msg += f"\n\n<b>Upload</b>: {self.extra_details['mode']}"
             if link or rclonePath and config_dict['RCLONE_SERVE_URL']:
                 buttons = ButtonMaker()
                 if link:
@@ -410,7 +452,8 @@ class MirrorLeechListener:
             if self.sameDir and self.uid in self.sameDir['tasks']:
                 self.sameDir['tasks'].remove(self.uid)
                 self.sameDir['total'] -= 1
-        msg = f"{self.tag} Download: {escape(error)}"
+        msg = f"{self.tag} Download: {escape(error)}\n<b>Elapsed</b>: {get_readable_time(time() - self.extra_details['startTime'])}"
+        msg += f"\n<b>Upload</b>: {self.extra_details['mode']}"
         await sendMessage(self.message, msg, button)
         if count == 0:
             await self.clean()
@@ -443,7 +486,13 @@ class MirrorLeechListener:
             if self.uid in download_dict.keys():
                 del download_dict[self.uid]
             count = len(download_dict)
-        await sendMessage(self.message, f"{self.tag} {escape(error)}")
+            if self.uid in self.sameDir:
+                self.sameDir.remove(self.uid)
+        msg = f"{self.tag} {escape(error)}\n<b>Elapsed</b>: {get_readable_time(time() - self.extra_details['startTime'])}"
+        msg += f"\n<b>Upload</b>: {self.extra_details['mode']}"
+        await sendMessage(self.message, msg)
+        if self.logMessage:
+            await sendMessage(self.logMessage, msg)
         if count == 0:
             await self.clean()
         else:
